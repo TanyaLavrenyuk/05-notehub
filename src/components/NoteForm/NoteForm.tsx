@@ -2,20 +2,23 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createNote } from "../../services/noteService";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
   onCancel: () => void;
 }
 
+const TAG_OPTIONS = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
+
 const validationSchema = Yup.object({
   title: Yup.string()
     .required("Обов'язкове поле")
     .max(50, "Максимум 50 символів"),
-  content: Yup.string()
-    .required("Обов'язкове pole")
-    .max(1000, "Максимум 1000 символів"),
-  tag: Yup.string().required("Обов'язкове поле"),
+  content: Yup.string().max(500, "Максимум 500 символів"),
+  tag: Yup.string()
+    .required("Обов'язкове поле")
+    .oneOf(TAG_OPTIONS, "Некоректний тег"),
 });
 
 export default function NoteForm({ onCancel }: NoteFormProps) {
@@ -36,7 +39,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
     initialValues: {
       title: "",
       content: "",
-      tag: "Note",
+      tag: "Todo",
     },
     validationSchema,
     onSubmit: (values) => {
@@ -54,22 +57,23 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
           className={css.input}
           {...formik.getFieldProps("title")}
         />
-        {formik.touched.title && formik.errors.title ? (
-          <div className={css.error}>{formik.errors.title}</div>
-        ) : null}
+        {formik.touched.title && formik.errors.title ? <ErrorMessage /> : null}
       </div>
 
       <div className={css.formGroup}>
         <label htmlFor="tag">Tag</label>
-        <input
+        <select
           id="tag"
-          type="text"
-          className={css.input}
+          className={css.select}
           {...formik.getFieldProps("tag")}
-        />
-        {formik.touched.tag && formik.errors.tag ? (
-          <div className={css.error}>{formik.errors.tag}</div>
-        ) : null}
+        >
+          {TAG_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        {formik.touched.tag && formik.errors.tag ? <ErrorMessage /> : null}
       </div>
 
       <div className={css.formGroup}>
@@ -80,7 +84,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
           {...formik.getFieldProps("content")}
         />
         {formik.touched.content && formik.errors.content ? (
-          <div className={css.error}>{formik.errors.content}</div>
+          <ErrorMessage />
         ) : null}
       </div>
 
