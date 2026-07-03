@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
-import { fetchNotes, deleteNote, createNote } from "../../services/noteService";
+import { fetchNotes } from "../../services/noteService";
 import NoteList from "../NoteList/NoteList";
 import Pagination from "../Pagination/Pagination";
 import SearchBox from "../SearchBox/SearchBox";
@@ -12,9 +12,8 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import css from "./App.module.css";
 
 export default function App() {
-  const queryClient = useQueryClient();
   const [page, setPage] = useState<number>(1);
-  const [search, setSearch] = useState<number | string>("");
+  const [search, setSearch] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
@@ -24,28 +23,8 @@ export default function App() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes(page, String(search)),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setIsModalOpen(false);
-    },
-    onError: () => {
-      alert("Помилка при створенні нотатки");
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-    onError: () => {
-      alert("Помилка при видаленні нотатки");
-    },
+    queryFn: () => fetchNotes(page, search),
+    placeholderData: (previousData) => previousData,
   });
 
   return (
@@ -56,6 +35,7 @@ export default function App() {
         {data && data.totalPages > 1 && (
           <Pagination
             pageCount={data.totalPages}
+            currentPage={page}
             onPageChange={(e) => setPage(e.selected + 1)}
           />
         )}
@@ -65,15 +45,10 @@ export default function App() {
         </button>
       </header>
 
-      {isLoading && <Loader />}
+      {isLoading && !data && <Loader />}
       {isError && <ErrorMessage />}
 
-      {data && data.notes.length > 0 && (
-        <NoteList
-          items={data.notes}
-          onDelete={(id) => deleteMutation.mutate(id)}
-        />
-      )}
+      {data && data.notes.length > 0 && <NoteList items={data.notes} />}
 
       {data && data.notes.length === 0 && !isLoading && (
         <p style={{ textAlign: "center", margin: "20px" }}>
@@ -82,12 +57,7 @@ export default function App() {
       )}
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <NoteForm
-          onSubmit={(values) =>
-            createMutation.mutate({ title: values.title, body: values.content })
-          }
-          onCancel={() => setIsModalOpen(false)}
-        />
+        <NoteForm onCancel={() => setIsModalOpen(false)} />
       </Modal>
     </div>
   );
