@@ -57,7 +57,9 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
           className={css.input}
           {...formik.getFieldProps("title")}
         />
-        {formik.touched.title && formik.errors.title ? <ErrorMessage /> : null}
+        {formik.touched.title && formik.errors.title ? (
+          <ErrorMessage>{formik.errors.title}</ErrorMessage>
+        ) : null}
       </div>
 
       <div className={css.formGroup}>
@@ -73,7 +75,9 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
             </option>
           ))}
         </select>
-        {formik.touched.tag && formik.errors.tag ? <ErrorMessage /> : null}
+        {formik.touched.tag && formik.errors.tag ? (
+          <ErrorMessage>{formik.errors.tag}</ErrorMessage>
+        ) : null}
       </div>
 
       <div className={css.formGroup}>
@@ -84,7 +88,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
           {...formik.getFieldProps("content")}
         />
         {formik.touched.content && formik.errors.content ? (
-          <ErrorMessage />
+          <ErrorMessage>{formik.errors.content}</ErrorMessage>
         ) : null}
       </div>
 
